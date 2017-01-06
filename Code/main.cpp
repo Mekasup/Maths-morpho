@@ -1,16 +1,16 @@
 #include <iostream>
 
 // headers pour les classes de base Image et FlatSE 
-#include "Common/Image.h"
-#include "Common/FlatSE.h"
+#include "../Common/Image.h"
+#include "../Common/FlatSE.h"
 // header pour les algos principaux de morphologie (éro, dil, ouv, fer, rec,...)
-#include "Algorithms/Morphology.h"
+#include "../Algorithms/Morphology.h"
 // header pour l'algo du Watershed
-#include "Algorithms/Watershed.h"
+#include "../Algorithms/Watershed.h"
 // header pour l'algo de seeded region growing (SRG)
-#include "Algorithms/RegionGrowing.h"
+#include "../Algorithms/RegionGrowing.h"
 // header pour la gestion des composantes connexes
-#include "Algorithms/ConnectedComponents.h"
+#include "../Algorithms/ConnectedComponents.h"
 
 
 using namespace std;
@@ -18,17 +18,62 @@ using namespace LibTIM;
 
 int main(int argc, char *argv[])
 {
-	if(argc !=3)
+        if(argc !=2)
 		{
-		std::cout << "Usage: " << argv[0] << " <image.pgm> <h>\n";
+                std::cout << "Usage: " << argv[0] << " <image.pgm>\n";
 		exit(1);
-		}
+                }
+
 	// Image est une classe générique paramétrée par le type des points contenus dans l'image
 	Image <unsigned char> im;
   	if(Image<U8>::load(argv[1],im))
 		std::cout <<"Great, image is loaded\n";
 	else return 1;
-	
+
+        //Seuillage
+        Image <unsigned char> im_seuil;
+        Image<U8>::load(argv[1],im_seuil);
+        unsigned char seuil = 120;
+        for(int i=0; i<im_seuil.getSizeX(); i++){
+            for(int j=0; j<im_seuil.getSizeY(); j++) {
+                if(im_seuil(i,j)<seuil)
+                    im_seuil(i,j) = 0;
+                else
+                    im_seuil(i,j) = 255;
+            }
+        }
+
+        im_seuil.save("Seuillage.pgm");
+
+        //Erosion, dilatation
+        FlatSE cercle;
+        cercle.make2DEuclidianBall(3);
+
+        Image <U8> imEro=erosion(im, cercle);
+        Image <U8> imDil=dilation(im, cercle);
+
+        imEro.save("Erosion.pgm");
+        imDil.save("Dillatation.pgm");
+
+        //Ouverture et fermeture
+
+        Image <U8> imOpen=opening(im, cercle);
+        Image <U8> imClose=closing(im, cercle);
+
+        imOpen.save("Ouverture.pgm");
+        imClose.save("Fermeture.pgm");
+
+        //Gradient morphologique
+
+        Image <U8> imGrad=morphologicalGradient(im, cercle);
+        Image <U8> imGradInt=internalMorphologicalGradient(im, cercle);
+        Image <U8> imGradFer=externalMorphologicalGradient(im, cercle);
+
+        imGrad.save("Gradient Morpho.pgm");
+        imGradInt.save("Gradient Morpho Interne.pgm");
+        imGradFer.save("Gradient Morpho Externe.pgm");
+
+        /*
 	// FlatSE est la classe stockant un élément structurant
 	FlatSE connexity;
 	// initialisation de l'élément structurant 'connexity' à un 8-voisinage (l'élément ne contient pas l'origine)
@@ -43,21 +88,7 @@ int main(int argc, char *argv[])
 	// X X X
 	// X X X 
 	se.make2DN9();
-	
-	////////////////////////////////////////////////////
-	// exemple érosion/dilatation                     //
-	////////////////////////////////////////////////////
-	
-	// érosion de l'image im par l'élément structurant se
-	Image <U8> imEro=erosion(im, se);
-	
-	// dilatation de l'image im par l'élément structurant se
-	Image <U8> imDil=dilation(im, se);
 
-	// écriture des images résultat au format .pgm
-	imEro.save("imEro.pgm");
-	imDil.save("imDil.pgm");
-	
 	////////////////////////////////////////
 	// exemple d'utilisation du watershed //
 	////////////////////////////////////////
@@ -96,4 +127,5 @@ int main(int argc, char *argv[])
 	
 	result1.save("result1.pgm");
 	result2.save("result2.pgm");
+        */
 }
