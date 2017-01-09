@@ -25,10 +25,65 @@ int main(int argc, char *argv[])
                 }
 
 	// Image est une classe générique paramétrée par le type des points contenus dans l'image
-	Image <unsigned char> im;
+        Image <unsigned char> im;
   	if(Image<U8>::load(argv[1],im))
 		std::cout <<"Great, image is loaded\n";
 	else return 1;
+
+
+        FlatSE ptitCercle;
+        ptitCercle.make2DEuclidianBall(1);
+
+        Image<U8> imNeg = Image<U8>(im.getSize());
+        for(int i=0; i<im.getSizeX(); i++)
+            for(int j=0; j<im.getSizeY(); j++)
+                imNeg(i,j)=255-im(i,j);
+        imNeg.save("Negatif.pgm");
+        Image<U8> imNegClo=closing(imNeg,ptitCercle);
+        imNegClo.save("Negatif Moins Bruit");
+        Image<U8> imSansFissure=erosion(imNegClo,ptitCercle);
+        Image<U8> onlyFiss=imNegClo-imSansFissure;
+        onlyFiss.save("Only Fissure");
+        Image<U8> onlyFissEro=erosion(onlyFiss,ptitCercle);
+        for(int i=0; i<im.getSizeX(); i++)
+                    for(int j=0; j<im.getSizeY(); j++)
+                            onlyFissEro(i,j) = onlyFissEro(i,j)*2;
+        onlyFissEro.save("Only Fissure Ero");
+        /*
+
+        // Restauration
+        FlatSE ligne5;
+        ligneligne5.clear();
+        int taille_rayon = 2;
+        for(int i=-taille_rayon; i<=taille_rayon; i++) {
+            Point<TCoord> point(i,0);
+            ligne.addPoint(point);
+        }
+        ligne.setNegPosOffsets();
+
+        Image<U8> imRest=closing(im,ligne5);
+        imRest.save("Restoration.pgm");
+
+        // Mettre en evidence les ronds blancs
+        FlatSE cercle7;
+        cercle7.make2DEuclidianBall(7);
+
+        Image <U8> imOuv=opening(im, cercle7);
+        imOuv.save("Ouverture.pgm");
+        Image <U8> imDif=im-imOuv;
+        imDif.save("Difference.pgm");
+
+        unsigned char seuil = 125;
+        for(int i=0; i<imDif.getSizeX(); i++){
+            for(int j=0; j<imDif.getSizeY(); j++) {
+                if(imDif(i,j)<seuil)
+                    imDif(i,j) = 0;
+                else
+                    imDif(i,j) = 255;
+            }
+        }
+
+        imDif.save("Ronds Blancs.pgm");
 
         //Seuillage
         Image <unsigned char> im_seuil;
@@ -48,6 +103,7 @@ int main(int argc, char *argv[])
         //Erosion, dilatation
         FlatSE cercle;
         cercle.make2DEuclidianBall(3);
+
 
         Image <U8> imEro=erosion(im, cercle);
         Image <U8> imDil=dilation(im, cercle);
@@ -73,6 +129,8 @@ int main(int argc, char *argv[])
         imGradInt.save("Gradient Morpho Interne.pgm");
         imGradFer.save("Gradient Morpho Externe.pgm");
 
+
+        */
         /*
 	// FlatSE est la classe stockant un élément structurant
 	FlatSE connexity;
