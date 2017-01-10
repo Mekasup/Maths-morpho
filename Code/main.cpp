@@ -1,4 +1,5 @@
 #include <iostream>
+#include <math.h>
 
 // headers pour les classes de base Image et FlatSE 
 #include "../Common/Image.h"
@@ -16,6 +17,8 @@
 using namespace std;
 using namespace LibTIM;
 
+#define PI 3.14159265
+
 int main(int argc, char *argv[])
 {
         if(argc !=2)
@@ -24,13 +27,53 @@ int main(int argc, char *argv[])
 		exit(1);
                 }
 
+
 	// Image est une classe générique paramétrée par le type des points contenus dans l'image
         Image <unsigned char> im;
   	if(Image<U8>::load(argv[1],im))
 		std::cout <<"Great, image is loaded\n";
 	else return 1;
 
+        FlatSE grande_ligne;
+        grande_ligne.clear();
+        int taille_rayon = 25;
+        double matrice_rot[2][2];
+        int angle;
+        matrice_rot[0][0] = ;matrice_rot[0][1] = ;
+        matrice_rot[1][0] = ;matrice_rot[1][1] = ;
+        for(int i=-taille_rayon; i<=taille_rayon; i++) {
+            Point<TCoord> point(i,0);
+            ligne.addPoint(point);
+        }
+        ligne.setNegPosOffsets();
 
+        /*
+        int taille = 10;
+        for (int i=1; i<= taille; i++) {
+            Image<U8> imDif=im;
+            unsigned char seuil = 125;
+            for(int ii=0; ii<imDif.getSizeX(); ii++){
+                for(int jj=0; jj<imDif.getSizeY(); jj++) {
+                    if(imDif(ii,jj)<seuil)
+                        imDif(ii,jj) = 0;
+                    else
+                        imDif(ii,jj) = 255;
+                }
+            }
+            FlatSE CercleVariable;
+            CercleVariable.make2DEuclidianBall(i);
+            Image<U8> imOuvVarible=opening(imDif,CercleVariable);
+            char nom[100];
+            sprintf(nom, "3-4 Granulometrie/Seuil%d.pgm", i);
+            imOuvVarible.save(nom);
+            int volume=0;
+            for(int i=0; i<im.getSizeX(); i++)
+                for(int j=0; j<im.getSizeY(); j++)
+                    volume += imOuvVarible(i,j);
+            cout << nom << volume << endl;
+        }
+
+        // Fisures
         FlatSE ptitCercle;
         ptitCercle.make2DEuclidianBall(1);
 
@@ -49,7 +92,6 @@ int main(int argc, char *argv[])
                     for(int j=0; j<im.getSizeY(); j++)
                             onlyFissEro(i,j) = onlyFissEro(i,j)*2;
         onlyFissEro.save("Only Fissure Ero");
-        /*
 
         // Restauration
         FlatSE ligne5;
