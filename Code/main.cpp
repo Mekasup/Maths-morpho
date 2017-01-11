@@ -34,10 +34,13 @@ int main(int argc, char *argv[])
 		std::cout <<"Great, image is loaded\n";
 	else return 1;
 
-        FlatSE cercle;
-        cercle.make2DEuclidianBall(5);
+        //Seuillage par hysterese
+        FlatSE cercleHystere;
+        cercleHystere.make2DEuclidianBall(5);
+
         int seuil_large=200;
         int seuil_etroit=151;
+
         Image<U8> imSeuilLarge=im;
         for(int i=0; i<im.getSizeX(); i++)
             for(int j=0; j<im.getSizeY(); j++)
@@ -51,49 +54,49 @@ int main(int argc, char *argv[])
                     imSeuilEtroit(i,j) = 0;
         imSeuilEtroit.save("Seuil Etroit.pgm");
 
-        geodesicReconstructionByDilation(imSeuilLarge,imSeuilEtroit,cercle);
+        geodesicReconstructionByDilation(imSeuilLarge,imSeuilEtroit,cercleHystere);
         imSeuilLarge.save("Seuil hystère.pgm");
 
-        /*
-        // Correction d'illumination
-        FlatSE cercle;
-        cercle.make2DEuclidianBall(10);
 
-        Image <U8> riceEro = erosion(im, cercle);
+        // Correction d'illumination
+        FlatSE cercleIllumi;
+        cercleIllumi.make2DEuclidianBall(10);
+
+        Image <U8> riceEro=erosion(im,cercleIllumi);
         riceEro.save("Erosion.pgm");
 
-        Image <U8> rice2 = im - riceEro;
+        Image <U8> rice2=im-riceEro;
         rice2.save("Difference.pgm");
 
-        double mean = 0;
-        int nbpixel = 0;
-        for(int i = 0; i < riceEro.getSizeX(); i ++)
-            for(int j = 0; j < riceEro.getSizeY(); j ++)
+        double moyenne=0;
+        int nbpixel=0;
+        for(int i=0;i<riceEro.getSizeX();i++)
+            for(int j=0;j<riceEro.getSizeY();j++)
             {
                 nbpixel++;
-                mean += riceEro(i, j);
+                moyenne+=riceEro(i,j);
             }
-        mean = mean / nbpixel;
 
-        for(int i = 0; i < rice2.getSizeX(); i ++)
-            for(int j = 0; j < rice2.getSizeY(); j ++)
+        moyenne=moyenne/nbpixel;
+
+        for(int i=0;i<rice2.getSizeX();i++)
+            for(int j=0;j<rice2.getSizeY();j++)
             {
-                if (rice2(i, j) < 50)
-                    rice2(i, j) = mean;
+                if (rice2(i,j)<50)
+                    rice2(i,j)=moyenne;
                 else
-                    rice2(i, j) = rice2(i, j) + mean;
+                    rice2(i,j)=rice2(i,j)+moyenne;
             }
         rice2.save("RajoutFond.pgm");
 
         //Covariogramme angulaire
-
-        FlatSE cercle;
-        cercle.make2DEuclidianBall(3);
-        Image <U8> imTraitement= externalMorphologicalGradient(im,cercle);
-        unsigned char seuil = 40;
+        FlatSE cercleAngulaire;
+        cercleAngulaire.make2DEuclidianBall(3);
+        Image <U8> imTraitement= externalMorphologicalGradient(im,cercleAngulaire);
+        unsigned char seuilAngulaire = 40;
         for(int i=0; i<imTraitement.getSizeX(); i++){
             for(int j=0; j<imTraitement.getSizeY(); j++) {
-                if(imTraitement(i,j)<seuil)
+                if(imTraitement(i,j)<seuilAngulaire)
                     imTraitement(i,j) = 0;
                 else
                     imTraitement(i,j) = 255;
@@ -103,12 +106,12 @@ int main(int argc, char *argv[])
 
         Image <U8> im1;
         Image <U8> im2;
-        int taille_rayon = 10;
+        int taille_rayon_angle = 10;
         for (int ro=0; ro<180; ro++){
             FlatSE grande_ligne;
             grande_ligne.clear();
             double angle = ro;
-            for(int i=-taille_rayon; i<=taille_rayon; i++) {
+            for(int i=-taille_rayon_angle; i<=taille_rayon_angle; i++) {
                 Point<TCoord> point((int)(i*cos(angle*PI/180)),(int)(i*sin(angle*PI/180)));
                 grande_ligne.addPoint(point);
             }
@@ -139,7 +142,6 @@ int main(int argc, char *argv[])
         imJusteTrait.save("JusteTrait.pgm");
 
         // Granulometrie
-
         int taille = 10;
         for (int i=1; i<= taille; i++) {
             Image<U8> imDif=im;
@@ -207,10 +209,10 @@ int main(int argc, char *argv[])
         Image <U8> imDif=im-imOuv;
         imDif.save("Difference.pgm");
 
-        unsigned char seuil = 125;
+        unsigned char seuilRestauration = 125;
         for(int i=0; i<imDif.getSizeX(); i++){
             for(int j=0; j<imDif.getSizeY(); j++) {
-                if(imDif(i,j)<seuil)
+                if(imDif(i,j)<seuilRestauration)
                     imDif(i,j) = 0;
                 else
                     imDif(i,j) = 255;
@@ -262,62 +264,4 @@ int main(int argc, char *argv[])
         imGrad.save("Gradient Morpho.pgm");
         imGradInt.save("Gradient Morpho Interne.pgm");
         imGradFer.save("Gradient Morpho Externe.pgm");
-
-
-        */
-        /*
-	// FlatSE est la classe stockant un élément structurant
-	FlatSE connexity;
-	// initialisation de l'élément structurant 'connexity' à un 8-voisinage (l'élément ne contient pas l'origine)
-	//   X X X
-	//   X . X
-	//   X X X
-	connexity.make2DN8();
-	
-	FlatSE se;
-	// initialisation à un 9-voisinage (l'élément contient l'origine)
-	// X X X
-	// X X X
-	// X X X 
-	se.make2DN9();
-
-	////////////////////////////////////////
-	// exemple d'utilisation du watershed //
-	////////////////////////////////////////
-	
-	// calcul du gradient morphologique
-	Image <U8> grad=morphologicalGradient(im,se);
-	grad.save("gradBeforeFiltering.pgm");
-	
-	// filtre h-min: suppression des minima du gradient non significatifs (évite la sur-segmentation du watershed)
-	
-	// paramètre h déterminant la profondeur maximale des minima éliminés
-	// possibilité d'obtenir une pyramide d'images pour chaque h
-	int h=atoi(argv[2]);
-	
-	hMinFilter(grad,se,h);
-	grad.save("gradAfterFiltering.pgm");
-	
-	// calcul des minima régionaux du gradient filtré
-	Image <U8> minima=regionalMinima(grad, connexity);
-	
-	// labelisation des minima
-	Image <TLabel> minimaLabel1=labelConnectedComponents(minima, connexity);
-	Image <TLabel> minimaLabel2=minimaLabel1;
-	
-	// Algo 1: watershed, algo de Meyer (le résultat est stocké dans l'image Label minimaLabel1)
-	watershedMeyer(grad,minimaLabel1,connexity);
-	
-	// Algo 2: croissance de régions (avantage: calculé directement sur l'image originale)
-	seededRegionGrowing(im,minimaLabel2,connexity);
-	
-	// pour chaque région labélisée, calcule la moyenne de la région dans l'image originale
-	// création d'une image mosaïque
-	
-	Image <U8> result1=computeMarkerMean(im, minimaLabel1);
-	Image <U8> result2=computeMarkerMean(im, minimaLabel2);
-	
-	result1.save("result1.pgm");
-	result2.save("result2.pgm");
-        */
 }
