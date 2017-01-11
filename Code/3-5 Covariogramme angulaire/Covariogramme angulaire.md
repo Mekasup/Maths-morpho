@@ -10,3 +10,5 @@ Avec le seuillage on voit bien les pics ou trop sans difficultés les deux orien
 ![](./grid.jpg) ![](./Traitement.jpg)
 
 ![](./TraitementSeuil.jpg) ![](./JusteTrait.jpg)
+
+![](./Graphe Gris.jpg) ![](./Graphe Seuil.jpg)
