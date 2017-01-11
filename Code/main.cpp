@@ -34,20 +34,112 @@ int main(int argc, char *argv[])
 		std::cout <<"Great, image is loaded\n";
 	else return 1;
 
-        FlatSE grande_ligne;
-        grande_ligne.clear();
-        int taille_rayon = 25;
-        double matrice_rot[2][2];
-        int angle;
-        matrice_rot[0][0] = ;matrice_rot[0][1] = ;
-        matrice_rot[1][0] = ;matrice_rot[1][1] = ;
-        for(int i=-taille_rayon; i<=taille_rayon; i++) {
-            Point<TCoord> point(i,0);
-            ligne.addPoint(point);
-        }
-        ligne.setNegPosOffsets();
+        FlatSE cercle;
+        cercle.make2DEuclidianBall(5);
+        int seuil_large=200;
+        int seuil_etroit=151;
+        Image<U8> imSeuilLarge=im;
+        for(int i=0; i<im.getSizeX(); i++)
+            for(int j=0; j<im.getSizeY(); j++)
+                if (imSeuilLarge(i,j) < seuil_large)
+                    imSeuilLarge(i,j) = 0;
+        imSeuilLarge.save("Seuil Large.pgm");
+        Image<U8> imSeuilEtroit=im;
+        for(int i=0; i<im.getSizeX(); i++)
+            for(int j=0; j<im.getSizeY(); j++)
+                if (imSeuilEtroit(i,j) < seuil_etroit)
+                    imSeuilEtroit(i,j) = 0;
+        imSeuilEtroit.save("Seuil Etroit.pgm");
+
+        geodesicReconstructionByDilation(imSeuilLarge,imSeuilEtroit,cercle);
+        imSeuilLarge.save("Seuil hystère.pgm");
 
         /*
+        // Correction d'illumination
+        FlatSE cercle;
+        cercle.make2DEuclidianBall(10);
+
+        Image <U8> riceEro = erosion(im, cercle);
+        riceEro.save("Erosion.pgm");
+
+        Image <U8> rice2 = im - riceEro;
+        rice2.save("Difference.pgm");
+
+        double mean = 0;
+        int nbpixel = 0;
+        for(int i = 0; i < riceEro.getSizeX(); i ++)
+            for(int j = 0; j < riceEro.getSizeY(); j ++)
+            {
+                nbpixel++;
+                mean += riceEro(i, j);
+            }
+        mean = mean / nbpixel;
+
+        for(int i = 0; i < rice2.getSizeX(); i ++)
+            for(int j = 0; j < rice2.getSizeY(); j ++)
+            {
+                if (rice2(i, j) < 50)
+                    rice2(i, j) = mean;
+                else
+                    rice2(i, j) = rice2(i, j) + mean;
+            }
+        rice2.save("RajoutFond.pgm");
+
+        //Covariogramme angulaire
+
+        FlatSE cercle;
+        cercle.make2DEuclidianBall(3);
+        Image <U8> imTraitement= externalMorphologicalGradient(im,cercle);
+        unsigned char seuil = 40;
+        for(int i=0; i<imTraitement.getSizeX(); i++){
+            for(int j=0; j<imTraitement.getSizeY(); j++) {
+                if(imTraitement(i,j)<seuil)
+                    imTraitement(i,j) = 0;
+                else
+                    imTraitement(i,j) = 255;
+            }
+        }
+        imTraitement.save("TraitementSeuil.pgm");
+
+        Image <U8> im1;
+        Image <U8> im2;
+        int taille_rayon = 10;
+        for (int ro=0; ro<180; ro++){
+            FlatSE grande_ligne;
+            grande_ligne.clear();
+            double angle = ro;
+            for(int i=-taille_rayon; i<=taille_rayon; i++) {
+                Point<TCoord> point((int)(i*cos(angle*PI/180)),(int)(i*sin(angle*PI/180)));
+                grande_ligne.addPoint(point);
+            }
+            grande_ligne.setNegPosOffsets();
+            Image <U8> imOpenAngle=opening(imTraitement, grande_ligne);
+            char nom[100];
+            sprintf(nom, "3-5 Covariogramme angulaire/Seuil%d.pgm", ro);
+            imOpenAngle.save(nom);
+            if (ro == 61)
+                im1=imOpenAngle;
+            if (ro == 151)
+                im2=imOpenAngle;
+            int volume=0;
+            for(int ii=0; ii<im.getSizeX(); ii++)
+                for(int j=0; j<im.getSizeY(); j++)
+                    volume += imOpenAngle(ii,j);
+            cout << volume << endl;
+        }
+
+        Image<U8> imJusteTrait=im;
+        for(int i=0; i<im.getSizeX(); i++)
+            for(int j=0; j<im.getSizeY(); j++)
+                if (im1(i,j)+im2(i,j) >= 255) {
+                    imJusteTrait(i,j) = 255;
+                }else{
+                    imJusteTrait(i,j) = im1(i,j)+im2(i,j);
+                }
+        imJusteTrait.save("JusteTrait.pgm");
+
+        // Granulometrie
+
         int taille = 10;
         for (int i=1; i<= taille; i++) {
             Image<U8> imDif=im;
